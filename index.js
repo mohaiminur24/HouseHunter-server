@@ -34,7 +34,7 @@ async function run() {
     // My all of router is from here
     const HouseHunter = client.db("HouseHunter");
     const users = HouseHunter.collection('users');
-
+    const AllHouses = HouseHunter.collection('allhouses');
 
     // new user create route is here
     app.post('/createnewuser', async(req,res)=>{
@@ -82,6 +82,17 @@ async function run() {
         console.log("create json token is not working");
       }
     });
+
+    // new house create route is here
+    app.post("/createnewhouse", async(req,res)=>{
+      try {
+        const data = req.body;
+        const result = await AllHouses.insertOne(data);
+        res.send(result);
+      } catch (error) {
+        console.log("create new house route is not working!")
+      }
+    })
 
 
 
