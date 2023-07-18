@@ -7,6 +7,7 @@ const port = process.env.PORT || 3000;
 
 
 app.use(cors());
+app.use(express.json());
 
 
 // MongoDb connection from here
@@ -32,6 +33,27 @@ async function run() {
     // My all of router is from here
     const HouseHunter = client.db("HouseHunter");
     const users = HouseHunter.collection('users');
+
+
+    // new user create route is here
+    app.post('/createnewuser', async(req,res)=>{
+        try {
+          const data = req.body;
+            console.log("body data",data);
+            const availableUser = await users.findOne({email: data.email});
+            console.log(availableUser);
+            if(!availableUser){
+                const result =await users.insertOne(data);
+                res.send(result);
+            }else{
+                res.status(401).send({error: "already available this user", message:"alreadyHaveUser"});
+            };
+        } catch (error) {
+            console.log("create new user route is not working!")
+        };
+    });
+
+
 
 
 
