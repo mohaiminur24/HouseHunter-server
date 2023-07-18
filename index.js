@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
 const cors = require('cors');
+var jwt = require("jsonwebtoken");
 require("dotenv").config();
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const port = process.env.PORT || 3000;
@@ -51,6 +52,35 @@ async function run() {
         } catch (error) {
             console.log("create new user route is not working!")
         };
+    });
+
+    // get User route is here
+    app.get("/getnewuser", async(req,res)=>{
+      try {
+        const UserEmail = req.query.email;
+        const result = await users.findOne({email: UserEmail});
+        if(result){
+          res.send(result);
+        }else{
+          res.send({error:"noUser"});
+        }
+      } catch (error) {
+        console.log("get user route is not working!")
+      }
+    });
+
+    // json web token create route is here
+    app.post("/jwt", (req, res) => {
+      try {
+        const user = req.body;
+        const accesstoken = process.env.DB_Access_token;
+        const token = jwt.sign(user, accesstoken, {
+          expiresIn: "1h",
+        });
+        res.send({ token });
+      } catch (error) {
+        console.log("create json token is not working");
+      }
     });
 
 
