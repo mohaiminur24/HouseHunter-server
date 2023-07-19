@@ -3,7 +3,7 @@ const app = express();
 const cors = require('cors');
 var jwt = require("jsonwebtoken");
 require("dotenv").config();
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 3000;
 
 
@@ -78,6 +78,17 @@ async function run() {
       next();
     };
 
+    // get single user houses route is here
+    app.get("/getsingleuserhouses",verifyToken, verifyHouseOwner, async(req,res)=>{
+      try {
+        const email = req.query.email;
+        const result = await AllHouses.find({HouseEmail: email}).toArray();
+        res.send(result);
+      } catch (error) {
+        console.log("get single user houses route is not working!")
+      }
+    });
+
     // new user create route is here
     app.post('/createnewuser', async(req,res)=>{
         try {
@@ -122,6 +133,17 @@ async function run() {
         res.send({ token });
       } catch (error) {
         console.log("create json token is not working");
+      }
+    });
+
+    // delete houses route is here
+    app.delete("/deleteuserroute", verifyToken,verifyHouseOwner, async(req,res)=>{
+      try {
+        const houseid = req.query.id;
+        const result = await AllHouses.deleteOne({_id: new ObjectId(houseid)});
+        res.send(result);
+      } catch (error) {
+        console.log("delete route is not working!")
       }
     });
 
