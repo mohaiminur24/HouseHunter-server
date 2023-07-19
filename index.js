@@ -50,6 +50,7 @@ async function run() {
     const HouseHunter = client.db("HouseHunter");
     const users = HouseHunter.collection("users");
     const AllHouses = HouseHunter.collection("allhouses");
+    const BookingHouses = HouseHunter.collection("bookinghouses");
 
     // verfify House Owner function is here
     const verifyHouseOwner = async (req, res, next) => {
@@ -74,15 +75,26 @@ async function run() {
       next();
     };
 
+    // get houserenter house route is here
+    app.get("/houserenterhouse", verifyToken, verifyHouseRenter, async(req,res)=>{
+      try {
+        const email = req.query.email;
+        const result = await BookingHouses.find({bookingEmail: email}).toArray();
+        res.send(result);
+      } catch (error) {
+        console.log("Houserenterhouse route is not wokring!")
+      }
+    })
+
     //Get all houses route is here
-    app.get("/allhouses",async(req,res)=>{
+    app.get("/allhouses", async (req, res) => {
       try {
         const result = await AllHouses.find().toArray();
         res.send(result);
       } catch (error) {
-        console.log("all houses route is not working!")
+        console.log("all houses route is not working!");
       }
-    })
+    });
     // get single user houses route is here
     app.get(
       "/getsingleuserhouses",
@@ -121,12 +133,10 @@ async function run() {
           const result = await users.insertOne(data);
           res.send(result);
         } else {
-          res
-            .status(401)
-            .send({
-              error: "already available this user",
-              message: "alreadyHaveUser",
-            });
+          res.status(401).send({
+            error: "already available this user",
+            message: "alreadyHaveUser",
+          });
         }
       } catch (error) {
         console.log("create new user route is not working!");
@@ -197,20 +207,48 @@ async function run() {
     );
 
     // house data update by houseowner route is here
-    app.patch("/updatehouse", verifyToken, verifyHouseOwner, async(req, res) => {
-      try {
-        const updateID = req.query.id;
-        const updateData = req.body;
-        const query = { _id: new ObjectId(updateID) };
-        const updateDoc = {
-          $set: {...updateData},
-        };
-        const result = await AllHouses.updateOne(query,updateDoc);
-        res.send(result)
-      } catch (error) {
-        console.log("update route is not working");
+    app.patch(
+      "/updatehouse",
+      verifyToken,
+      verifyHouseOwner,
+      async (req, res) => {
+        try {
+          const updateID = req.query.id;
+          const updateData = req.body;
+          const query = { _id: new ObjectId(updateID) };
+          const updateDoc = {
+            $set: { ...updateData },
+          };
+          const result = await AllHouses.updateOne(query, updateDoc);
+          res.send(result);
+        } catch (error) {
+          console.log("update route is not working");
+        }
       }
-    });
+    );
+
+    //Booking house route is here
+    app.post(
+      "/bookinghouse",
+      verifyToken,
+      verifyHouseRenter,
+      async (req, res) => {
+        try {
+          const data = req.body;
+          const total = await BookingHouses.find({
+            bookingEmail: data.bookingEmail,
+          }).toArray();
+          if (total.length >= 2) {
+            res.send({error:"maxtwoError"});
+          } else {
+            const result = await BookingHouses.insertOne(data);
+            res.send(result);
+          }
+        } catch (error) {
+          console.log("Booking house route is not working!");
+        }
+      }
+    );
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
