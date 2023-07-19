@@ -74,6 +74,15 @@ async function run() {
       next();
     };
 
+    //Get all houses route is here
+    app.get("/allhouses",async(req,res)=>{
+      try {
+        const result = await AllHouses.find().toArray();
+        res.send(result);
+      } catch (error) {
+        console.log("all houses route is not working!")
+      }
+    })
     // get single user houses route is here
     app.get(
       "/getsingleuserhouses",
