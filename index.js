@@ -11,10 +11,29 @@ app.use(cors());
 app.use(express.json());
 
 
+// Token verify function is here
+const verifyToken = (req, res, next) => {
+  const authorize = req.headers.authorize;
+  if (!authorize) {
+    return res
+      .status(401)
+      .send({ error: true, message: "Unauthorized Access!" });
+  }
+  const token = authorize.split(" ")[1];
+  jwt.verify(token, process.env.DB_Access_token, (error, decoded) => {
+    if (error) {
+      return res
+        .status(403)
+        .send({ error: true, message: "Invalid Token access" });
+    }
+    req.decoded = decoded;
+    next();
+  });
+};
+
+
 // MongoDb connection from here
 const uri = `mongodb+srv://${process.env.MongodbUserName}:${process.env.MongodbPassword}@cluster0.85env82.mongodb.net/?retryWrites=true&w=majority`;
-
-console.log(uri);
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -35,6 +54,29 @@ async function run() {
     const HouseHunter = client.db("HouseHunter");
     const users = HouseHunter.collection('users');
     const AllHouses = HouseHunter.collection('allhouses');
+
+    // verfify House Owner function is here
+    const verifyHouseOwner = async (req, res, next) => {
+      const tokenEmail = req.decoded.email;
+      const result = await users.findOne({ email: tokenEmail });
+      if (result.role !== "HouseOwner") {
+        return res
+          .status(403)
+          .send({ error: true, message: "unauthorize instractor access!" });
+      }
+      next();
+    };
+    // verfify House renter function is here
+    const verifyHouseRenter = async (req, res, next) => {
+      const tokenEmail = req.decoded.email;
+      const result = await users.findOne({ email: tokenEmail });
+      if (result.role !== "HouseRenter") {
+        return res
+          .status(403)
+          .send({ error: true, message: "unauthorize instractor access!" });
+      }
+      next();
+    };
 
     // new user create route is here
     app.post('/createnewuser', async(req,res)=>{
@@ -84,7 +126,7 @@ async function run() {
     });
 
     // new house create route is here
-    app.post("/createnewhouse", async(req,res)=>{
+    app.post("/createnewhouse",verifyToken,verifyHouseOwner,async(req,res)=>{
       try {
         const data = req.body;
         const result = await AllHouses.insertOne(data);
