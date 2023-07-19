@@ -75,28 +75,6 @@ async function run() {
       next();
     };
 
-    // filter house route is here
-    app.post("/filterdata", async(req,res)=>{
-      try {
-        const filterData = req.body;
-        const rentmonth = req.query.rent;
-        if(rentmonth == "More5000"){
-          const query ={...filterData,rentpermonth:{ $gte:500} }
-          const result = await AllHouses.find(query).toArray();
-          res.send(result);
-        }else{
-          const query ={...filterData,rentpermonth:{ $lt:500} }
-          const result = await AllHouses.find(query).toArray();
-          res.send(result);
-        }
-        const query ={...filterData}
-        const result = await AllHouses.find(query).toArray();
-        res.send(result);
-      } catch (error) {
-        console.log("filter houses route is not working!")
-      }
-    })
-
     // get houserenter house route is here
     app.get("/houserenterhouse", verifyToken, verifyHouseRenter, async(req,res)=>{
       try {
@@ -271,6 +249,28 @@ async function run() {
         }
       }
     );
+    
+    // filter house route is here
+    app.post("/filterdata", async(req,res)=>{
+      try {
+        const filterData = req.body;
+        const rentmonth = req.query.rent;
+        if(rentmonth == "More5000"){
+          const query ={...filterData,rentpermonth:{ $gte:500} }
+          const result = await AllHouses.find(query).toArray();
+          res.send(result);
+        }else{
+          const query ={...filterData,rentpermonth:{ $lt:500} }
+          const result = await AllHouses.find(query).toArray();
+          res.send(result);
+        }
+        const query ={...filterData}
+        const result = await AllHouses.find(query).toArray();
+        res.send(result);
+      } catch (error) {
+        console.log("filter houses route is not working!")
+      }
+    })
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
